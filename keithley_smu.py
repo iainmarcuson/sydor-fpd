@@ -15,8 +15,8 @@ def parse_read(dict_keys, smu_string):
 
     split_list = smu_string.strip().rstrip(',').split(',') # Comma-separated
 
-    print(split_list)
-    print(len(split_list))
+    #print(split_list)
+    #print(len(split_list))
     if (len(split_list) % len(dict_keys)) != 0: # Length mismatch
         msg_string = "Length mismatch."
         ret_status = -1;

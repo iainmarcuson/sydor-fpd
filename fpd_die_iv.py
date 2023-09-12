@@ -4,6 +4,9 @@ import sys
 import config_parse as config_parse # -=-= TODO Move to a sydor_utils package
 import math
 import time
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import ticker
 
 def read_curve(port):
     in_bytes = b''
@@ -20,7 +23,7 @@ def run_script(port, script):
         print("Sending line: '{}'".format(script_line))
         line_bytes = (script_line + "\r\n").encode()
         port.write(line_bytes)
-        time.sleep(2)
+        time.sleep(1)
 
 def main(argv):
     config_name = argv[0]
@@ -108,6 +111,19 @@ def main(argv):
         curve_file.write(line_string)
 
     curve_file.close()
+
+    v_array = np.array(curve_dict[curve_keys[0]])
+    i_array = np.array(curve_dict[curve_keys[1]])
+
+    fig, ax = plt.subplots()
+    fig.suptitle('Die {} I-V Curve'.format(config_dict['DIE_ID']))
+    ax.set_xlabel('Voltage (V)')
+    ax.yaxis.set_major_formatter(ticker.EngFormatter(unit='A'))
+    ax.set_ylabel('Current')
+    ax.plot(v_array, i_array)
+    fig.savefig('{}_curve.png'.format(config_dict['DIE_ID']),dpi=200);
+    
+    plt.show()
     
     return
 
