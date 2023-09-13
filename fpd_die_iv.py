@@ -6,6 +6,8 @@ import math
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import glob
+
 from matplotlib import ticker
 
 def read_curve(port):
@@ -26,12 +28,13 @@ def run_script(port, script):
         time.sleep(1)
 
 def main(argv):
-    config_name = argv[0]
 
     if len(argv) != 1:
         print("Usage: python3 fpd_die_iv.py <config file name>")
         return 1
 
+    config_name = argv[0]
+    
     # Create the script we will need for the reset
     reset_script = ["*RST", ":SOURCE:VOLT 0", ":SOURCE:SWEEP:RANGING BEST", ":SOURCE:VOLT:MODE SWEEP", ":SOURCE:SWEEP:SPACING LIN"]
 
@@ -56,7 +59,20 @@ def main(argv):
         config_approve_str = input().strip().upper()
         if config_approve_str == 'C':
             break
-        
+
+    curve_filename = config_dict['DIE_ID']+"_curve.csv";
+    if len(glob.glob(curve_filename)) > 0:
+        while True:
+            print("Warning: Datafile '{}' already exists and will be clobbered.".format(curve_filename))
+            print("Do you wish to continue?  Input 'y' to continue or 'n' to abort.")
+            clobber_approve_str = input().strip().upper()
+            if clobber_approve_str == 'Y':
+                break
+            if clobber_approve_str == 'N':
+                return 0
+            else:
+                continue
+                  
     # Open the serial port
     keithley_serial = serial.Serial(config_dict['COM'], 38400, timeout=2);
 
@@ -98,7 +114,6 @@ def main(argv):
     print("Curve parsing return {}: ".format(ret_status) + msg_string)
 
     curve_len = len(curve_dict[curve_keys[0]])
-    curve_filename = config_dict['DIE_ID']+"_curve.csv";
     curve_file = open(curve_filename, "w")
     #print(curve_len)
     #print(curve_dict[curve_keys[0]])
