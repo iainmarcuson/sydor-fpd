@@ -29,12 +29,15 @@ def run_script(port, script):
 
 def main(argv):
 
-    if len(argv) != 1:
-        print("Usage: python3 fpd_die_iv.py <config file name>")
+    die_name_cfg = None
+    if (len(argv) != 1) and (len(argv) != 2):
+        print("Usage: python3 fpd_die_iv.py <config file name> [die name]")
         return 1
 
     config_name = argv[0]
-    
+    if len(argv) > 1:
+        die_name_cfg = argv[1]
+        
     # Create the script we will need for the reset
     reset_script = ["*RST", ":SOURCE:VOLT 0", ":SOURCE:SWEEP:RANGING BEST", ":SOURCE:VOLT:MODE SWEEP", ":SOURCE:SWEEP:SPACING LIN"]
 
@@ -53,6 +56,16 @@ def main(argv):
             print("Missing configuration keys.  Aborting.")
             return 1
 
+        if die_name_cfg:
+            config_dict['DIE_ID'] = die_name_cfg
+            print("Die ID overridden by command line.")
+
+        for curr_char in config_dict['DIE_ID']:
+            if not (curr_char.isalnum() or (curr_char == '_')):
+                print("Invalid DIE_ID: {}".format(config_dict['DIE_ID']))
+                print("ERROR: The DIE_ID may contain only letters, numbers, and underscores (_).  Aborting.")
+                return 1
+                      
         config_parse.config_print(config_dict)
 
         print("Please verify configuration settings.  Enter 'C' to continue.  Otherwise, adjust configuration file and enter any other key to reload configuration.")
@@ -107,7 +120,8 @@ def main(argv):
     #test_string = keithley_serial.read(10)
     #print(test_string)
     curve_string = read_curve(keithley_serial)
-
+    keithley_serial.write(":output off\r\n".encode())
+    
     curve_keys = ['v_in', 'i_out', 'r_meas', 'timestamp', 'status']
     curve_dict, ret_status, msg_string = keithley_smu.parse_read(curve_keys, curve_string)
 
